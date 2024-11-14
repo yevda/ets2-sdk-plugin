@@ -1,8 +1,14 @@
-﻿using System;
+using Newtonsoft.Json;
+using StackExchange.Redis;
+using System;
+using System.ComponentModel;
 using System.Drawing;
+using System.IO;
 using System.Linq;
+using System.Security.Principal;
 using System.Text;
 using System.Windows.Forms;
+using System.Xml;
 
 namespace Ets2SdkClient.Demo
 {
@@ -10,12 +16,23 @@ namespace Ets2SdkClient.Demo
     {
         public Ets2SdkTelemetry Telemetry;
 
+        private ConnectionMultiplexer redis;
+
         public Ets2SdkClientDemo()
         {
             InitializeComponent();
 
+            // Connect to the Redis server
+            redis = ConnectionMultiplexer.Connect("localhost");
+            // Get a reference to the Redis database
+            IDatabase db = redis.GetDatabase();
+
             Telemetry = new Ets2SdkTelemetry();
-            Telemetry.Data += Telemetry_Data;
+            Telemetry.Data += (Ets2Telemetry data, bool updated) =>
+            {
+                PushToRedis(db, data);
+                Telemetry_Data(data, updated);
+            };
 
             Telemetry.JobFinished += TelemetryOnJobFinished;
             Telemetry.JobStarted += TelemetryOnJobStarted;
@@ -29,6 +46,13 @@ namespace Ets2SdkClient.Demo
             }
         }
 
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            base.OnClosing(e);
+            // Disconnect from Redis
+            redis.Close();
+        }
+
         private void TelemetryOnJobFinished(object sender, EventArgs args)
         {
             MessageBox.Show("Job finished, or at least unloaded nearby cargo destination.");
@@ -39,10 +63,43 @@ namespace Ets2SdkClient.Demo
             MessageBox.Show("Just started job OR loaded game with active.");
         }
 
+        private void PushToRedis(IDatabase db, Ets2Telemetry data)
+        {
+            // Set a key-value pair
+            db.StringSet("engineRpm", data.Drivetrain.EngineRpm.ToString());
+            db.StringSet("truckModel", data.TruckId.ToString());
+            db.StringSet("speed", data.Drivetrain.SpeedKmh.ToString());
+            db.StringSet("brakeTemperature", data.Drivetrain.BrakeTemperature.ToString());
+            db.StringSet("userThrottle", data.Controls.UserThrottle.ToString());
+            db.StringSet("userBrake", data.Controls.UserBrake.ToString());
+            db.StringSet("userSteer", data.Controls.UserSteer.ToString());
+            db.StringSet("trailerMass", data.Job.Mass.ToString());
+            db.StringSet("truckOdometer", data.Drivetrain.TruckOdometer.ToString());
+
+
+
+
+        }
+
         private void Telemetry_Data(Ets2Telemetry data, bool updated)
         {
             try
             {
+                ////Catching data structure produced by Ets2Telemetry class
+                //// Set a variable to the Documents path.
+                //string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+
+                //// Append text to an existing file named "WriteLines_from_ETS2_SDK.txt".
+                //using (StreamWriter outputFile = new StreamWriter(Path.Combine(docPath, "Write_Ets2Telemetry_from_ETS2_SDK.txt"), false))
+                //{
+                //    string my_json = JsonConvert.SerializeObject(data, Newtonsoft.Json.Formatting.Indented);
+                //    //outputFile.WriteLine("Line " + DateTime.Now.ToUniversalTime().ToString());
+                //    outputFile.WriteLine(my_json);
+                //}
+                
+                
+                
+
                 if (this.InvokeRequired)
                 {
                     this.Invoke(new TelemetryData(Telemetry_Data), new object[2] { data, updated });

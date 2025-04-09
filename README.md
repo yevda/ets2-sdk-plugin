@@ -84,3 +84,7 @@ A C# 4.0 demo application is provided inside the ets2-client folder. The demo ap
 
 ### Other
 For other languages you need to create/find a library that can open and read MemoryMapped files. The data storage format is binary and can be found in "ets2-telemetry/inc/ets2-telemetry-common.hpp". The shared memory map name is "Local\SimTelemetryETS2".
+
+## Redis integration
+
+docker run --name redis -p 6379:6379 -e ALLOW_EMPTY_PASSWORD=yes bitnami/redis:latest redis-cli KEYS * get engineRpm

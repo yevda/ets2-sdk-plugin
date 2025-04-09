@@ -72,7 +72,9 @@ namespace Ets2SdkClient.Demo
             db.StringSet("brakeTemperature", data.Drivetrain.BrakeTemperature.ToString());
             db.StringSet("userThrottle", data.Controls.UserThrottle.ToString());
             db.StringSet("userBrake", data.Controls.UserBrake.ToString());
+            db.StringSet("gameBrake", data.Controls.GameBrake.ToString());
             db.StringSet("userSteer", data.Controls.UserSteer.ToString());
+            db.StringSet("gameSteer", data.Controls.GameSteer.ToString());
             db.StringSet("trailerMass", data.Job.Mass.ToString());
             db.StringSet("truckOdometer", data.Drivetrain.TruckOdometer.ToString());
 
